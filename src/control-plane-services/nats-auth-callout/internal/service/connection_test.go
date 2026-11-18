@@ -239,8 +239,8 @@ func TestConnectionOptions_TLSReconnectFailureUpdatesMetrics(t *testing.T) {
 	rejectNext.Store(true)
 	require.NoError(t, nc.ForceReconnect())
 	require.Eventually(t, func() bool {
-		return testutil.ToFloat64(counter) > before && nc.IsConnected()
-	}, 5*time.Second, 10*time.Millisecond, "TLS reconnect failure must reach the service metrics and recover")
+		return testutil.ToFloat64(counter) > before && nc.IsConnected() &&
+			logs.FilterMessage("NATS reconnect attempt failed").Len() > 0
+	}, 5*time.Second, 10*time.Millisecond, "TLS reconnect failure must update metrics, log, and recover")
 	require.NoError(t, nc.FlushTimeout(time.Second))
-	require.NotEmpty(t, logs.FilterMessage("NATS reconnect attempt failed").All())
 }
